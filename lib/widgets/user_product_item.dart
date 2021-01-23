@@ -12,6 +12,8 @@ class UserProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaffold = Scaffold.of(context);
+
     return Column(
       children: [
         ListTile(
@@ -25,7 +27,11 @@ class UserProductItem extends StatelessWidget {
               children: <Widget>[
                 IconButton(
                   onPressed: () {
-                    Navigator.of(context).pushNamed(EditProductScreen.routeName, arguments: productId);
+                    try {
+                      Navigator.of(context).pushNamed(EditProductScreen.routeName, arguments: productId);
+                    } catch (_) {
+                      scaffold.showSnackBar(snackBarError('editing error!'));
+                    }
                   },
                   icon: const Icon(
                     Icons.edit,
@@ -37,8 +43,12 @@ class UserProductItem extends StatelessWidget {
                     Icons.delete,
                     color: Colors.red,
                   ),
-                  onPressed: () {
-                    Provider.of<Products>(context, listen: false).removeProduct(productId);
+                  onPressed: () async {
+                    try {
+                      await Provider.of<Products>(context, listen: false).removeProduct(productId);
+                    } catch (_) {
+                      scaffold.showSnackBar(snackBarError('deleting field!'));
+                    }
                   },
                 ),
               ],
@@ -47,6 +57,16 @@ class UserProductItem extends StatelessWidget {
         ),
         const Divider(),
       ],
+    );
+  }
+
+  SnackBar snackBarError(String message) {
+    return SnackBar(
+      content: Text(
+        message,
+        style: TextStyle(color: Colors.red),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }

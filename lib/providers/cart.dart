@@ -12,6 +12,7 @@ class CartItem {
     @required this.price,
     @required this.quantity,
   });
+
 }
 
 class Cart with ChangeNotifier {
@@ -20,15 +21,16 @@ class Cart with ChangeNotifier {
   Map<String, CartItem> get items {
     return {..._items};
   }
-  double get priceTotal{
+
+  double get priceTotal {
     double total = 0;
     _items.forEach((key, value) {
-      total+= value.price * value.quantity;
+      total += value.price * value.quantity;
     });
     return total;
   }
 
-  int get itemCount{
+  int get itemCount {
     return _items.length;
   }
 
@@ -54,35 +56,41 @@ class Cart with ChangeNotifier {
     }
     notifyListeners();
   }
-  void removeOneItemQuantity(String id){
-    if(!_items.containsKey(id)) return;
 
-    if(_items[id].quantity > 1)
-    _items.update(id, (existedCard) =>  CartItem(
-      id: existedCard.id,
-      title: existedCard.title,
-      price: existedCard.price,
-      quantity: existedCard.quantity - 1,
-    ));
+  void removeOneItemQuantity(String id) {
+    if (!_items.containsKey(id)) return;
+
+    if (_items[id].quantity > 1)
+      _items.update(
+          id,
+          (existedCard) => CartItem(
+                id: existedCard.id,
+                title: existedCard.title,
+                price: existedCard.price,
+                quantity: existedCard.quantity - 1,
+              ));
     else
       _items.remove(id);
 
     notifyListeners();
   }
 
-  void addOneItemQuantity(String id){
-    if(!_items.containsKey(id)) return;
+  void addOneItemQuantity(String id) {
+    if (!_items.containsKey(id)) return;
 
-    _items.update(id, (existedCard) =>  CartItem(
-      id: existedCard.id,
-      title: existedCard.title,
-      price: existedCard.price,
-      quantity: existedCard.quantity + 1,
-    ));
+    _items.update(
+        id,
+        (existedCard) => CartItem(
+              id: existedCard.id,
+              title: existedCard.title,
+              price: existedCard.price,
+              quantity: existedCard.quantity + 1,
+            ));
 
     notifyListeners();
   }
-  void clear(){
+
+  void clear() {
     _items = {};
     notifyListeners();
   }

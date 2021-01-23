@@ -86,24 +86,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (_productId == null) {
       try {
         await Provider.of<Products>(context, listen: false).addItem(_product);
-      } catch (error) {
+      } catch (_) {
         await _showAlertDialog();
-      } finally {
-        // setState(() {_isLoading = false;});
-        Navigator.of(context).pop();
       }
     } else {
-      Provider.of<Products>(context, listen: false).updateProduct(_product);
-      // setState(() { _isLoading = false;});
-      Navigator.of(context).pop();
+      try {
+        await Provider.of<Products>(context, listen: false).updateProduct(_product);
+      }catch(_){
+        await _showAlertDialog();
+      }
     }
+    Navigator.of(context).pop();
+
   }
 
   Future<void> _showAlertDialog() async {
     await showDialog<Null>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('some error occur!'),
+        title: Text('an error occur!'),
         content: Text('error occur while saving the info in server'),
         actions: <Widget>[
           FlatButton(

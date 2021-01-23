@@ -5,6 +5,7 @@ import '../widgets/badge.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart.dart';
 import '../widgets/appDrawer.dart';
+import '../providers/product.dart';
 
 enum FilterFavorite {
   favoriteOnly,
@@ -18,6 +19,33 @@ class ProductOverviewScreen extends StatefulWidget {
 
 class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
   bool favoriteOnly = false; //will be send to ProductsGrid widget
+  var _isLoading = true;
+  var _hasError = false;
+  var _isInit = true;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    if (_isInit) {
+      Provider.of<Products>(context).fetchAndSetProducts().catchError((error) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }).then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    }
+    _isInit = false;
+
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +80,8 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
               ),
             ],
           ),
-          Consumer<Cart>(//to keep counting for badge widget
+          Consumer<Cart>(
+            //to keep counting for badge widget
             builder: (_, cart, chNotRebuild) => Badge(
               value: cart.itemCount.toString(),
               child: chNotRebuild,
@@ -66,7 +95,16 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           ),
         ],
       ),
-      body: ProductsGrid(favoriteOnly),
+      body: _hasError
+          ? Center(
+            child: Text(
+                'an error occur while fetching data from server!',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+          )
+          : _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : ProductsGrid(favoriteOnly),
     );
   }
 }

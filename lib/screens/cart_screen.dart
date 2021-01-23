@@ -14,20 +14,20 @@ class CartScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Carts'),
+        title: const Text('Your Carts'),
       ),
       body: Column(
         children: [
           Container(
             height: 100,
             child: Card(
-              margin: EdgeInsets.all(15),
+              margin: const EdgeInsets.all(15),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.only(left: 8.0),
-                    child: Text(
+                    child: const Text(
                       'Total',
                       style: TextStyle(
                         fontSize: 25,
@@ -37,7 +37,7 @@ class CartScreen extends StatelessWidget {
                   Spacer(),
                   Chip(
                     backgroundColor: Theme.of(context).primaryColor,
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     label: Text(
                       '\$${cart.priceTotal.toStringAsFixed(2)}',
                       style: TextStyle(
@@ -47,20 +47,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   FractionallySizedBox(
                     heightFactor: 1,
-                    child: FlatButton(
-                      child: Text(
-                        'ORDER NOW',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
-                      onPressed: () {
-                        Provider.of<Order>(context,listen: false)
-                        .addItem(
-                          cart.items.values.toList(),
-                          cart.priceTotal,
-                        );
-                        cart.clear();
-                      },
-                    ),
+                    child: OrderButton(cart: cart),
                   ),
                 ],
               ),
@@ -84,6 +71,49 @@ class CartScreen extends StatelessWidget {
           )
         ],
       ),
+    );
+  }
+}
+
+class OrderButton extends StatefulWidget {
+  const OrderButton({
+    Key key,
+    @required this.cart,
+  }) : super(key: key);
+
+  final Cart cart;
+
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: _isLoading
+          ? CircularProgressIndicator()
+          : const Text(
+              'ORDER NOW',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+      onPressed: (widget.cart.itemCount <= 0 || _isLoading)
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              await Provider.of<Order>(context, listen: false).addItem(
+                widget.cart.items.values.toList(),
+                widget.cart.priceTotal,
+              );
+              setState(() {
+                _isLoading = false;
+              });
+              widget.cart.clear();
+            },
     );
   }
 }
