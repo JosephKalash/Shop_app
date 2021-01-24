@@ -1,88 +1,97 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import '../providers/order.dart' as ordModel;
 import 'package:intl/intl.dart';
+import 'package:flutter_app/models/orderItem.dart' as ordModel;
 
 class OrderItem extends StatefulWidget {
-  final ordModel.OrderItem order;
+  final ordModel.OrderItem orderItem;
 
-  OrderItem(this.order);
+  OrderItem(this.orderItem);
 
   @override
   _OrderItemState createState() => _OrderItemState();
 }
 
 class _OrderItemState extends State<OrderItem> {
+  ///to expand the card and show ordered products.
   bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.all(10),
-      child: Column(children: <Widget>[
-        ListTile(
-          title: Text(
-            'Total: \$${widget.order.totalPrice.toStringAsFixed(2)}',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            DateFormat('DD/MM/yyyy HH:mm').format(widget.order.orderDate),
-          ),
-          trailing: IconButton(
-            icon: Icon(
-              _expanded ? Icons.expand_less : Icons.expand_more,
-              color: Colors.deepOrange,
+      margin: const EdgeInsets.all(10),
+      ///column to show ordered products in same card when expand it.
+      child: Column(
+        children: <Widget>[
+          ListTile(
+            title: Text(
+              'Total: \$${widget.orderItem.totalPrice.toStringAsFixed(2)}',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            onPressed: () {
-              setState(() {
-                _expanded = !_expanded;
-              });
-            },
+            subtitle: Text(
+              DateFormat('DD/MM/yyyy HH:mm').format(widget.orderItem.orderDate),
+            ),
+            trailing: IconButton(
+              icon: Icon(
+                _expanded ? Icons.expand_less : Icons.expand_more,
+                color: Colors.deepOrange,
+              ),
+              onPressed: () {
+                setState(() {
+                  _expanded = !_expanded;
+                });
+              },
+            ),
           ),
-        ),
-        if (_expanded)
-          Container(
-            height: min(widget.order.products.length * 20.0 + 30, 180.0),
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-            child: ListView(
-                children: widget.order.products
-                    .map((product) => Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Text(
-                                  product.title,
-                                  style: TextStyle(fontSize: 18),
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${product.quantity}x',
-                                      style: productDetailTextStyle(),
-                                    ),
-                                    Text(
-                                      ' | ',
-                                      style: productDetailTextStyle(),
-                                    ),
-                                    Text(
-                                      '\$${product.price}',
-                                      style: productDetailTextStyle(),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const Divider(),
-                          ],
-                        ))
-                    .toList()),
-          )
-      ]),
+          if (_expanded)
+            Container(
+              height: min(widget.orderItem.products.length * 20.0 + 30, 180.0),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+              child: ListView(
+                children: widget.orderItem.products
+                /** this function return iterable of elements
+                 * each element is returned from call the fun we pass to map. */
+                    .map(
+                      (product) => Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                product.title,
+                                style: TextStyle(fontSize: 18),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${product.quantity}x',
+                                    style: _productDetailTextStyle(),
+                                  ),
+                                  Text(
+                                    ' | ',
+                                    style: _productDetailTextStyle(),
+                                  ),
+                                  Text(
+                                    '\$${product.price}',
+                                    style: _productDetailTextStyle(),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const Divider(),
+                        ],
+                      ),
+                    )
+                    .toList(),
+              ),
+            )
+        ],
+      ),
     );
   }
 
-  TextStyle productDetailTextStyle() {
+  TextStyle _productDetailTextStyle() {
     return TextStyle(
       fontSize: 18,
       color: Colors.grey,

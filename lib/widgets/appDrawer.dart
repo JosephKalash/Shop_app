@@ -1,4 +1,3 @@
-// TODO Implement this library.
 import 'package:flutter/material.dart';
 import 'package:flutter_app/screens/order_screen.dart';
 import 'package:flutter_app/screens/user_products_screen.dart';
@@ -13,31 +12,30 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Hello Friend'),
             automaticallyImplyLeading: false,
           ),
-          ListTile(
-            leading: const Icon(Icons.shop),
-            title: const Text('Shop'),
-            onTap: () {
-              Navigator.of(context).pushReplacementNamed('/');
-            },
-          ),
+          _buildListTile(Icons.shop, 'Shop', () {
+            Navigator.of(context).pushReplacementNamed('/');
+          }),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.payment),
-            title: const Text('My Orders'),
-            onTap: () {
-              Navigator.of(context).pushReplacementNamed(OrderScreen.routeName);
-            },
-          ),
+          _buildListTile(Icons.payment, 'My Orders', () {
+            Navigator.of(context).pushReplacementNamed(OrderScreen.routeName);
+          }),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.apps),
-            title: const Text('Manage Products'),
-            onTap: () {
-              Navigator.of(context).pushReplacementNamed(UserProductsScreen.routeName);
-            },
-          ),
+          _buildListTile(Icons.apps, 'Manage Products', () {
+            Navigator.of(context).pushReplacementNamed(UserProductsScreen.routeName);
+          }),
         ],
       ),
+    );
+  }
+
+  ListTile _buildListTile(IconData icon, String label, Function navigatorFun) {
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: Colors.deepOrange,
+      ),
+      title: Text(label),
+      onTap: navigatorFun,
     );
   }
 }

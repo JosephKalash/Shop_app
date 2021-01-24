@@ -18,33 +18,45 @@ class ProductOverviewScreen extends StatefulWidget {
 }
 
 class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
-  bool favoriteOnly = false; //will be send to ProductsGrid widget
+  bool favoriteOnly = false;
+
+  ///will be send to ProductsGrid widget.
   var _isLoading = true;
   var _hasError = false;
   var _isInit = true;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void didChangeDependencies() {
+    /** make listener on Products object in ProductsGrid widget not here.*/
     if (_isInit) {
-      Provider.of<Products>(context).fetchAndSetProducts().catchError((error) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-        });
-      }).then((_) {
+      Provider.of<Products>(context, listen: false).fetchAndSetProducts().catchError(
+        (error) {
+          setState(() {
+            _isLoading = false;
+            _hasError = true;
+          });
+        },
+      ).then((_) {
         setState(() {
           _isLoading = false;
         });
       });
     }
     _isInit = false;
-
     super.didChangeDependencies();
+  }
+
+  Future<void> _refreshProductsData() async {
+    await Provider.of<Products>(context, listen: false).fetchAndSetProducts().catchError((_) {
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+          'refresh field',
+          style: TextStyle(color: Colors.red),
+          textAlign: TextAlign.center,
+        )),
+      );
+    });
   }
 
   @override
@@ -52,11 +64,11 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
     return Scaffold(
       drawer: AppDrawer(),
       appBar: AppBar(
-        title: Text('MyShop'),
+        title: const Text('MyShop'),
         actions: <Widget>[
-          /*in cart class we have toggleFavorite method
-          to chang favorite attribute and call notifyChange
-          */
+          /**in product class we have toggleFavorite()
+           * to change favorite attribute and call notifyListeners().
+           **/
           PopupMenuButton(
             onSelected: (FilterFavorite filter) {
               setState(() {
@@ -66,28 +78,29 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
                   favoriteOnly = false;
               });
             },
-            icon: Icon(
+            icon: const Icon(
               Icons.more_vert,
             ),
-            itemBuilder: (ctx) => [
-              PopupMenuItem(
+            itemBuilder: (_) => [
+              const PopupMenuItem(
                 child: Text('Favorite only'),
                 value: FilterFavorite.favoriteOnly,
               ),
-              PopupMenuItem(
+              const PopupMenuItem(
                 child: Text('Show all'),
                 value: FilterFavorite.showAll,
               ),
             ],
           ),
+          /**
+           * this consumer for badge widget which counts the number of products a user put in his cart*/
           Consumer<Cart>(
-            //to keep counting for badge widget
             builder: (_, cart, chNotRebuild) => Badge(
               value: cart.itemCount.toString(),
               child: chNotRebuild,
             ),
             child: IconButton(
-              icon: Icon(Icons.shopping_cart),
+              icon: const Icon(Icons.shopping_cart),
               onPressed: () {
                 Navigator.of(context).pushNamed(CartScreen.routeName);
               },
@@ -95,16 +108,18 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           ),
         ],
       ),
-      body: _hasError
-          ? Center(
-            child: Text(
+      body: RefreshIndicator(
+        onRefresh: () => _refreshProductsData(),
+        child: _hasError
+            ? Center(
+                child: const Text(
                 'an error occur while fetching data from server!',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-          )
-          : _isLoading
-              ? Center(child: CircularProgressIndicator())
-              : ProductsGrid(favoriteOnly),
+              ))
+            : _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ProductsGrid(favoriteOnly),
+      ),
     );
   }
 }

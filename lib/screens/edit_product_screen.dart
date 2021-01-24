@@ -1,7 +1,11 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/providers/product.dart';
 import 'package:provider/provider.dart';
 
+/// this screen is for edit and add new product.**/
 class EditProductScreen extends StatefulWidget {
   static const String routeName = '/editProduct-screen';
 
@@ -10,11 +14,16 @@ class EditProductScreen extends StatefulWidget {
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
+  ///we use focus node to move from on field to another and to listen on changes of focus on that field.
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
   final _imageUrlFocusNode = FocusNode();
   final _imageUrlController = TextEditingController();
+
+  ///control a field like get text
   final _formKey = GlobalKey<FormState>();
+
+  ///get spacial key for form widget
   Product _product;
   String _productId, _title = '', _description = '', _imageUrl;
   double _price;
@@ -23,8 +32,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   void initState() {
-    //so whenever we lose the focus on image url field
-    // we rebuild UI to fitch image witch its url is in controller.
+    ///so whenever we lose the focus on the image's url field,
+    /// we rebuild the UI to fitch an image witch its url is in controller.
     _imageUrlFocusNode.addListener(_updateImage);
     super.initState();
   }
@@ -32,7 +41,10 @@ class _EditProductScreenState extends State<EditProductScreen> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
+      ///we can't call modalRoute.of from context because the widget isn't build completely yet.
       final productId = ModalRoute.of(context).settings.arguments as String;
+
+      ///if we now edit existing product(by pass his id as argument) or add new one.
       if (productId != null) {
         _product = Provider.of<Products>(context, listen: false).getById(productId);
         _productId = productId;
@@ -48,6 +60,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   void dispose() {
+    ///free up the memory.
     _imageUrlFocusNode.removeListener(_updateImage);
     _imageUrlController.dispose();
     _imageUrlFocusNode.dispose();
@@ -56,7 +69,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     super.dispose();
   }
 
-  //will be called if the user clicks on other component
+  ///this fun will be called if the user clicks on other component.
   void _updateImage() {
     if (!_imageUrlFocusNode.hasFocus) {
       if (_checkUrlFormat(_imageUrlController.text)) return;
@@ -65,7 +78,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
   }
 
   Future<void> _saveForm() async {
-    //call all validator methods in fields and make sure all value are correct
+    ///this will call all validator methods in fields and make sure all value are correct
+    ///we reach the form by his key
     if (!_formKey.currentState.validate()) return;
 
     _formKey.currentState.save();
@@ -82,39 +96,42 @@ class _EditProductScreenState extends State<EditProductScreen> {
     setState(() {
       _isLoading = true;
     });
-    //edit existed product or create new one
-    if (_productId == null) {
-      try {
+
+    ///update existed product or add new one
+    try {
+      if (_productId == null)
         await Provider.of<Products>(context, listen: false).addItem(_product);
-      } catch (_) {
-        await _showAlertDialog();
-      }
-    } else {
-      try {
+      else
         await Provider.of<Products>(context, listen: false).updateProduct(_product);
-      }catch(_){
-        await _showAlertDialog();
-      }
+    } catch (_) {
+      await _showAlertDialog();
     }
     Navigator.of(context).pop();
-
   }
 
   Future<void> _showAlertDialog() async {
     await showDialog<Null>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('an error occur!'),
-        content: Text('error occur while saving the info in server'),
-        actions: <Widget>[
-          FlatButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: Text('Okay'),
-          )
-        ],
-      ),
+      builder: (ctx) => Platform.isIOS
+          ? CupertinoAlertDialog(
+              title: const Text('An error occur!'),
+              content: const Text('An error occurred while saving the info in server!'),
+              actions: <Widget>[flatButtonDialog(ctx)],
+            )
+          : AlertDialog(
+              title: const Text('An error occur!'),
+              content: const Text('An error occurred while saving the info in server!'),
+              actions: <Widget>[flatButtonDialog(ctx)],
+            ),
+    );
+  }
+
+  FlatButton flatButtonDialog(BuildContext ctx) {
+    return FlatButton(
+      onPressed: () {
+        Navigator.of(ctx).pop();
+      },
+      child: const Text('Okay'),
     );
   }
 
@@ -133,17 +150,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Product'),
+        title: const Text('Edit Product'),
         actions: [
           IconButton(
-              icon: Icon(Icons.save),
+              icon: const Icon(Icons.save),
               onPressed: () {
                 _saveForm();
               })
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -168,7 +185,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                           FocusScope.of(context).requestFocus(_priceFocusNode);
                         },
                         validator: (value) {
-                          if (value.isEmpty) return 'please enter a title';
+                          if (value.isEmpty) return 'please enter a title';///this message will appear under the field
                           return null;
                         },
                       ),
@@ -183,7 +200,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         ),
                         textInputAction: TextInputAction.next,
                         keyboardType: TextInputType.number,
-                        focusNode: _priceFocusNode,
+                        focusNode: _priceFocusNode,///put it in focus tree
                         onSaved: (value) {
                           _price = double.parse(value);
                         },
@@ -209,6 +226,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         maxLength: 150,
                         maxLines: 3,
                         keyboardType: TextInputType.multiline,
+                        focusNode: _descriptionFocusNode,
                         onSaved: (value) {
                           _description = value;
                         },

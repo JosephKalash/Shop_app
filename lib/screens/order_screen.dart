@@ -14,19 +14,20 @@ class OrderScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Your Orders'),
       ),
+      ///this widget provide for us the state of the data we request or listen to.
       body: FutureBuilder(
-        future: Provider.of<Order>(context).fetchAndSetOrder(),
+        future: Provider.of<Order>(context,listen: false).fetchAndSetOrder(),
         builder: (ctx, dataSnapshot) {
-          if (dataSnapshot.connectionState == ConnectionState.waiting)
+          if (dataSnapshot.connectionState == ConnectionState.waiting)///like if we make stateful widget with isLoading boolean
             return Center(child: CircularProgressIndicator());
-          else if (dataSnapshot.error != null)
+          else if (dataSnapshot.error != null)///like catchError() in future object.
             return Center(
                 child: Text(
-              'an error occur while fetching data from server!',
+              'An error occurred while fetching data from server!',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ));
-          else
-            return Consumer(
+          else///like then().
+            return Consumer<Order>(
               builder: (ctx, orders, _) {
                 return ListView.builder(
                   itemBuilder: (ctx, i) => OrderItem(orders.items[i]),

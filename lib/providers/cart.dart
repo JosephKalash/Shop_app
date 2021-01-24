@@ -1,60 +1,39 @@
 import 'package:flutter/foundation.dart';
-
-class CartItem {
-  final String id;
-  final String title;
-  final double price;
-  final int quantity;
-
-  CartItem({
-    @required this.id,
-    @required this.title,
-    @required this.price,
-    @required this.quantity,
-  });
-
-}
+import 'package:flutter_app/models/cartItem.dart';
 
 class Cart with ChangeNotifier {
+  //key is product id
   Map<String, CartItem> _items = {};
 
-  Map<String, CartItem> get items {
-    return {..._items};
-  }
+  Map<String, CartItem> get items => {..._items}; //copy of the map to prevent modify on it
 
   double get priceTotal {
     double total = 0;
-    _items.forEach((key, value) {
+
+    _items.forEach((_, value) {
       total += value.price * value.quantity;
     });
+
     return total;
   }
 
-  int get itemCount {
-    return _items.length;
-  }
+  int get itemCount => _items.length;
 
   void addCard(String productId, String title, double price) {
     if (_items.containsKey(productId)) {
-      _items.update(
-          productId,
-          (existedCard) => CartItem(
-                id: existedCard.id,
-                title: existedCard.title,
-                price: existedCard.price,
-                quantity: existedCard.quantity + 1,
-              ));
+      addOneItemQuantity(productId); //it call notifyListeners() too.
+      return;
     } else {
-      _items.putIfAbsent(
+      _items.putIfAbsent(//for a new key
           productId,
           () => CartItem(
                 id: DateTime.now().toString(),
                 title: title,
                 price: price,
                 quantity: 1,
-              ));
+              ),);
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void removeOneItemQuantity(String id) {

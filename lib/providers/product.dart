@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_app/models/excptions.dart';
+import 'package:flutter_app/models/exceptions.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -20,17 +20,18 @@ class Product with ChangeNotifier {
     this.isFavorite = false,
   });
 
-  Future<void> toggleFavorite() async{
-    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/$id.json';
+  Future<void> toggleFavorite() async {
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/${this.id}.json';
 
-    isFavorite = !isFavorite;
+    this.isFavorite = !this.isFavorite;
     notifyListeners();
 
-    final response = await http.patch(url,body: json.encode({
-      'isFavorite' : isFavorite,
-    }));
-
-    if(response.statusCode >= 400){
+    final response = await http.patch(url,
+        body: json.encode({
+          'isFavorite': isFavorite,
+        }));
+    //if the saving in server operation didn't work, We'll keep the old value
+    if (response.statusCode >= 400) {
       isFavorite = !isFavorite;
       notifyListeners();
       throw HttpException('error occur while save an editing product in server!');
@@ -39,7 +40,7 @@ class Product with ChangeNotifier {
 }
 
 class Products with ChangeNotifier {
-   List<Product> _items = [];
+  List<Product> _items = [];
   //   Product(
   //     id: 'p1',
   //     title: 'Red Shirt',
@@ -71,27 +72,24 @@ class Products with ChangeNotifier {
 
   final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products.json';
 
+  List<Product> get items => [..._items];
 
-  List<Product> get items {
-    return [..._items];
-  }
-
-  List<Product> getFavoriteOnly() {
-    return _items.where((product) => product.isFavorite).toList();
-  }
+  List<Product> getFavoriteOnly() => _items.where((product) => product.isFavorite).toList();
 
   Product getById(String id) => _items.firstWhere((product) => product.id == id);
 
   Future<void> fetchAndSetProducts() async {
     try {
       final response = await http.get(url);
-      if(response.statusCode >= 400)        throw 'error while fetching data';
+      if (response.statusCode >= 400) throw 'error while fetching data';
 
-        final extractedData = json.decode(response.body) as Map<String, dynamic>;
-         if(extractedData == null) return;
+      final extractedData = json.decode(response.body) as Map<String, dynamic>; //map because we need keys
+      if (extractedData == null) return;
 
-        final List<Product> loadedProducts = [];
-        extractedData.forEach((prodId, prodData) {
+      final List<Product> loadedProducts = [];
+
+      extractedData.forEach(
+        (prodId, prodData) {
           loadedProducts.add(Product(
             id: prodId,
             title: prodData['title'],
@@ -100,14 +98,15 @@ class Products with ChangeNotifier {
             isFavorite: prodData['isFavorite'],
             imageUrl: prodData['imageUrl'],
           ));
-        });
-        _items = loadedProducts;
-        notifyListeners();
+        },
+      );
+
+      _items = loadedProducts;
+      notifyListeners();
     } catch (error) {
       throw error;
     }
   }
-
 
   Future<void> addItem(Product product) async {
     try {
@@ -122,6 +121,8 @@ class Products with ChangeNotifier {
             },
           ));
 
+      if(response.statusCode >= 400) throw HttpException('An error occurred while saving product in server!');
+
       _items.add(Product(
         id: json.decode(response.body)['name'],
         title: product.title,
@@ -131,26 +132,29 @@ class Products with ChangeNotifier {
         isFavorite: product.isFavorite,
       ));
       notifyListeners();
+
     } catch (error) {
       print(error);
       throw error;
     }
   }
 
-  Future<void> removeProduct(productId) async{
-    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/$productId.json';
+  Future<void> removeProduct(productId) async {
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/$productId.json';//'cause we need it for sp item.
 
     final index = _items.indexWhere((element) => element.id == productId);
-    var productPointer = _items[index];
+    var productPointer = _items[index];//the item will keep in memory as there's pointer on it.
+
     _items.removeAt(index);
     notifyListeners();
 
     final response = await http.delete(url);
-    if(response.statusCode >= 400) {
+    //if the operation field the product will be added again.
+    if (response.statusCode >= 400) {
       _items.insert(index, productPointer);
       notifyListeners();
       throw HttpException('error while deleting product');
-    }else{
+    } else {
       productPointer = null;
     }
   }
@@ -166,19 +170,20 @@ class Products with ChangeNotifier {
       _items[index] = newProduct;
       notifyListeners();
 
-      final response = await http.patch(url,body: json.encode({
-        'title': newProduct.title,
-        'description' : newProduct.description,
-        'price' : newProduct.price,
-        'imageUrl' : newProduct.imageUrl,
-      }));
-      if(response.statusCode >= 400){
+      final response = await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'price': newProduct.price,
+            'imageUrl': newProduct.imageUrl,
+          }));
+
+      if (response.statusCode >= 400) {
         _items.removeAt(index);
         _items.insert(index, productPointer);
         notifyListeners();
         throw HttpException('error occur while save an editing product in server!');
-      }
-      else{
+      } else {
         productPointer = null;
       }
     }

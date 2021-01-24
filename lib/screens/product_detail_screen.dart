@@ -12,9 +12,7 @@ class ProductDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          productLoaded.title,
-        ),
+        title: Text(productLoaded.title),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -33,10 +31,10 @@ class ProductDetailScreen extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: Column(
                   children: [
-                    Text('Price:',
-                        style: TextStyle(
-                          fontSize: 20,
-                        )),
+                    const Text(
+                      'Price:',
+                      style: TextStyle(fontSize: 20),
+                    ),
                     Text(
                       '\$${productLoaded.price}',
                       style: TextStyle(
