@@ -7,6 +7,7 @@ import '../providers/cart.dart';
 class ProductGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    ///listen is false because the only change is on favorite icon so we make it child of consumer.
     final product = Provider.of<Product>(context, listen: false);
     final cart = Provider.of<Cart>(context, listen: false);
 
@@ -15,8 +16,9 @@ class ProductGridItem extends StatelessWidget {
       child: GridTile(
         child: GestureDetector(
           onTap: () {
-            Navigator.of(context)
-                .pushNamed(ProductDetailScreen.routeName, arguments: product.id);
+            Navigator.of(context).pushNamed(ProductDetailScreen.routeName, arguments: product.id);
+
+            ///could send multiple arguments as map.
           },
           child: Image.network(
             product.imageUrl,
@@ -29,7 +31,7 @@ class ProductGridItem extends StatelessWidget {
             builder: (ctx, product, _) => IconButton(
               icon: Icon(
                 product.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: Theme.of(context).accentColor,
+                size: 24,
               ),
               color: Theme.of(context).accentColor,
               onPressed: () {
@@ -37,35 +39,39 @@ class ProductGridItem extends StatelessWidget {
               },
             ),
           ),
-          title: Center(
-            child: Text(
-              product.title,
-              textAlign: TextAlign.center,
-            ),
+          title: Text(
+            product.title,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20),
           ),
           trailing: IconButton(
-            icon: Icon(Icons.shopping_cart),
+            icon: Icon(
+              Icons.shopping_cart,
+              size: 22,
+            ),
+            color: Theme.of(context).accentColor,
             onPressed: () {
               cart.addCard(product.id, product.title, product.price);
 
               Scaffold.of(context).hideCurrentSnackBar();
               Scaffold.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Added one cart'),
-                  duration: Duration(seconds: 2),
+                  content: const Text('Added one cart'),
+                  duration: const Duration(seconds: 2),
                   action: SnackBarAction(
                     label: 'UNDO',
                     onPressed: () {
-                      cart.removeOneItemQuantity(product.id); //this will also removes a cartItem if his quantity was one
+                      ///this will also removes a cartItem if his quantity was one.
+                      cart.removeOneItemQuantity(product.id);
                     },
                   ),
                 ),
               );
             },
-            color: Theme.of(context).accentColor,
           ),
         ),
       ),
     );
   }
 }
+

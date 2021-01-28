@@ -24,7 +24,7 @@ class OrderScreen extends StatelessWidget {
             return Center(
                 child: Text(
               'An error occurred while fetching data from server!',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ));
           else///like then().
             return Consumer<Order>(

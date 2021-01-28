@@ -12,10 +12,10 @@ class UserProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scaffold = Scaffold.of(context);
+    final scaffold = Scaffold.of(context);//for snackBar.
 
     return Column(
-      children: [
+      children: <Widget>[
         ListTile(
           leading: CircleAvatar(
             backgroundImage: NetworkImage(imageUrl),

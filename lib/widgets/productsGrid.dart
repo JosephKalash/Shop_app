@@ -10,17 +10,19 @@ class ProductsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ///build channel to object products and listen to changes.
     final productsData = Provider.of<Products>(context);
     final products = favoriteOnly ? productsData.getFavoriteOnly() :  productsData.items;
-
+    //TODO (1): RUN Provider.of<Product>(context); to see the exception.
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: 2,  ///column items / or row items if horizontal
         mainAxisSpacing: 15,
         crossAxisSpacing: 10,
         childAspectRatio: 3 / 2,
       ),
-      itemBuilder: (ctx, i) => ChangeNotifierProvider.value(
+      /** use .value in this case because the value are initialized and better performance*/
+      itemBuilder: (_, i) => ChangeNotifierProvider.value(
         value: products[i],
         child: ProductGridItem(),
       ),

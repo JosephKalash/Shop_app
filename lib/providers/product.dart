@@ -40,6 +40,7 @@ class Product with ChangeNotifier {
 }
 
 class Products with ChangeNotifier {
+
   List<Product> _items = [];
   //   Product(
   //     id: 'p1',
@@ -69,8 +70,9 @@ class Products with ChangeNotifier {
   //     price: 50.99,
   //     imageUrl: 'https://cdn.pixabay.com/photo/2015/08/05/09/55/mens-shoes-875948_960_720.jpg',
   //   ),
+  var _token;
+  Products(this._token,this._items);
 
-  final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products.json';
 
   List<Product> get items => [..._items];
 
@@ -79,6 +81,8 @@ class Products with ChangeNotifier {
   Product getById(String id) => _items.firstWhere((product) => product.id == id);
 
   Future<void> fetchAndSetProducts() async {
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products.json?auth=$_token';
+
     try {
       final response = await http.get(url);
       if (response.statusCode >= 400) throw 'error while fetching data';
@@ -109,6 +113,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addItem(Product product) async {
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products.json?auth=$_token';
+
     try {
       final response = await http.post(url,
           body: json.encode(
@@ -140,7 +146,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> removeProduct(productId) async {
-    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/$productId.json';//'cause we need it for sp item.
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/$productId.json?auth=$_token';//'cause we need it for sp item.
 
     final index = _items.indexWhere((element) => element.id == productId);
     var productPointer = _items[index];//the item will keep in memory as there's pointer on it.
@@ -160,7 +166,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> updateProduct(Product newProduct) async {
-    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/prodcts/${newProduct.id}.json';
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/prodcts/${newProduct.id}.json?auth=$_token';
 
     final index = _items.indexWhere((element) => element.id == newProduct.id);
 

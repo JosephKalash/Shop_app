@@ -114,7 +114,7 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
             ? Center(
                 child: const Text(
                 'an error occur while fetching data from server!',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ))
             : _isLoading
                 ? const Center(child: CircularProgressIndicator())

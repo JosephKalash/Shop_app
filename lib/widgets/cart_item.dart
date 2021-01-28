@@ -59,7 +59,7 @@ class CardItem extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          subtitle: Text('\$${(price * quantity)}'),
+          subtitle: Text('\$${(price * quantity).toStringAsFixed(2)}'),
           trailing: Text(
             '$quantity x',
             style: TextStyle(
