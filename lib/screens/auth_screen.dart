@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app/models/exceptions.dart';
 import 'package:provider/provider.dart';
@@ -59,7 +61,7 @@ class AuthScreen extends StatelessWidget {
                         'MyShop',
                         style: TextStyle(
                           color: Theme.of(context).accentTextTheme.headline6.color,
-                          fontSize: 50,
+                          fontSize: 40,
                           fontFamily: 'Anton',
                           fontWeight: FontWeight.normal,
                         ),
@@ -89,7 +91,7 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard> with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey();
   AuthMode _authMode = AuthMode.Login;
   Map<String, String> _authData = {
@@ -100,8 +102,41 @@ class _AuthCardState extends State<AuthCard> {
   final _passwordController = TextEditingController();
   final _passwordAgainFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+  AnimationController _animationController;
+  Animation<Offset> _slideAnimation;
+  Animation<double> _opacityAnimation;
 
-  void _submit() async {
+  @override
+  void initState() {
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _slideAnimation = Tween(
+      begin: Offset(0.0, -0.5),
+      end: Offset(0.0, 0.0),
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
+    _opacityAnimation = Tween(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
+    // _animationController.addListener(() { setState(() {}); });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
     if (!_formKey.currentState.validate()) {
       // Invalid!
       return;
@@ -140,6 +175,7 @@ class _AuthCardState extends State<AuthCard> {
       }
       _showErrorDialog(errorMessage);
     } catch (error) {
+      print(error);
       const errorMessage = 'connection field, try later!';
       _showErrorDialog(errorMessage);
     }
@@ -151,30 +187,41 @@ class _AuthCardState extends State<AuthCard> {
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('An error occurred!'),
-        content: Text(message),
-        actions: [
-          FlatButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-            },
-            child: Text('Okay'),
-          )
-        ],
-      ),
+      builder: (ctx) => Platform.isIOS
+          ? CupertinoAlertDialog(
+              title: const Text('An error occurred!'),
+              content: Text(message),
+              actions: <Widget>[_flatButtonDialog(ctx)],
+            )
+          : AlertDialog(
+              title: const Text('An error occurred!'),
+              content: Text(message),
+              actions: [_flatButtonDialog(ctx)],
+            ),
+    );
+  }
+
+  FlatButton _flatButtonDialog(BuildContext ctx) {
+    return FlatButton(
+      onPressed: () {
+        Navigator.of(ctx).pop();
+      },
+      child: const Text('Okay'),
     );
   }
 
   void _switchAuthMode() {
-    if (_authMode == AuthMode.Login)
+    if (_authMode == AuthMode.Login) {
       setState(() {
         _authMode = AuthMode.Signup;
       });
-    else
+      _animationController.forward();
+    } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      _animationController.reverse();
+    }
   }
 
   @override
@@ -185,7 +232,16 @@ class _AuthCardState extends State<AuthCard> {
         borderRadius: BorderRadius.circular(10.0),
       ),
       elevation: 8.0,
-      child: Container(
+      /** alternative solution but it is less efficient for container:
+         * child: AnimatedBuilder(
+            animation: _heightAnimation,
+            builder: (_, ch) => Container(height: _heightAnimation.value.height)
+            child: ch,
+            ),
+         */
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeIn,
         height: _authMode == AuthMode.Signup ? 320 : 260,
         constraints: BoxConstraints(
           minHeight: _authMode == AuthMode.Signup ? 320 : 260,
@@ -230,21 +286,41 @@ class _AuthCardState extends State<AuthCard> {
                       ? (_) {
                           FocusScope.of(context).requestFocus(_passwordAgainFocusNode);
                         }
-                      : null,
+                      : (_) {
+                          _submit();
+                        },
                 ),
-                if (_authMode == AuthMode.Signup)
-                  TextFormField(
-                    enabled: _authMode == AuthMode.Signup,
-                    decoration: const InputDecoration(labelText: 'Confirm Password'),
-                    obscureText: true,
-                    focusNode: _passwordAgainFocusNode,
-                    validator: _authMode == AuthMode.Signup
-                        ? (value) {
-                            if (value != _passwordController.text) return 'Passwords do not match!';
-                            return null;
-                          }
-                        : null,
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.easeIn,
+                  constraints: BoxConstraints(
+                    minHeight: _authMode == AuthMode.Signup ? 60 : 0,
+                    maxHeight: _authMode == AuthMode.Signup ? 120 : 0,
                   ),
+                  child: FadeTransition(
+                    opacity: _opacityAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: TextFormField(
+                        enabled: _authMode == AuthMode.Signup,
+                        decoration: const InputDecoration(labelText: 'Confirm Password'),
+                        obscureText: true,
+                        focusNode: _passwordAgainFocusNode,
+                        validator: _authMode == AuthMode.Signup
+                            ? (value) {
+                                if (value != _passwordController.text) return 'Passwords do not match!';
+                                return null;
+                              }
+                            : null,
+                        onFieldSubmitted: _authMode == AuthMode.Signup
+                            ? (_) {
+                                _submit();
+                              }
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(
                   height: 20,
                 ),

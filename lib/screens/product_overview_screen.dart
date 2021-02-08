@@ -29,18 +29,18 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
   void didChangeDependencies() {
     /** make listener on Products object in ProductsGrid widget not here.*/
     if (_isInit) {
-      Provider.of<Products>(context, listen: false).fetchAndSetProducts().catchError(
+      Provider.of<Products>(context, listen: false).fetchAndSetProducts().then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+      }).catchError(
         (error) {
           setState(() {
             _isLoading = false;
             _hasError = true;
           });
         },
-      ).then((_) {
-        setState(() {
-          _isLoading = false;
-        });
-      });
+      );
     }
     _isInit = false;
     super.didChangeDependencies();
@@ -117,7 +117,7 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ))
             : _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : ProductsGrid(favoriteOnly),
       ),
     );

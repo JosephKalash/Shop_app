@@ -11,56 +11,69 @@ class ProductDetailScreen extends StatelessWidget {
     final productLoaded = Provider.of<Products>(context, listen: false).getById(productID);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(productLoaded.title),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              height: 300,
-              width: double.infinity,
-              child: Image.network(
-                productLoaded.imageUrl,
-                fit: BoxFit.cover,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              title: Text(
+                productLoaded.title,
+                textAlign: TextAlign.start,
+                style: TextStyle(color: Colors.black,),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              child: Container(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  children: [
-                    const Text(
-                      'Price:',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    Text(
-                      '\$${productLoaded.price}',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.deepOrange,
-                      ),
-                    ),
-                  ],
+              background: Hero(
+                tag: productID,
+                child: Image.network(
+                  productLoaded.imageUrl,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-              child: Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Description: \n ${productLoaded.description}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black87,
+            expandedHeight: 300,
+            pinned: true,
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate(
+              [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Price:',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          '\$${productLoaded.price}',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                  child: Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Description: \n ${productLoaded.description}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 800),
+              ],
             ),
-          ],
-        ),
+          )
+        ],
       ),
     );
   }

@@ -9,12 +9,18 @@ import 'dart:convert';
 
 class Order with ChangeNotifier {
   List<OrderItem> _items = [];
+  var _token;
+  var _userId;
+
+  Order(this._token,this._userId,this._items);
   //in database url of firebase by add new directory|tree name after / it will create it automatically
-  final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/orders.json';
 
   List<OrderItem> get items => [..._items];
 
   Future<void> fetchAndSetOrder() async {
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/orders/$_userId.json?auth=$_token';
+    try {
+
     final response = await http.get(url);
 
     if (response.statusCode >= 400) throw HttpException('an error occurred while saving the order in server!');
@@ -23,7 +29,6 @@ class Order with ChangeNotifier {
     if (extractedData == null) return;//there is no data
 
     List<OrderItem> temp = [];
-    try {
       extractedData.forEach((id, order) {
         temp.add(OrderItem.name(
           id,
@@ -49,6 +54,8 @@ class Order with ChangeNotifier {
   }
 
   Future<void> addItem(List<CartItem> products, double price) async {
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/orders/$_userId.json?auth=$_token';
+
     final dateNow = DateTime.now();
     try {
       final response = await http.post(

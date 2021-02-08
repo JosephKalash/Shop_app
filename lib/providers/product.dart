@@ -20,16 +20,16 @@ class Product with ChangeNotifier {
     this.isFavorite = false,
   });
 
-  Future<void> toggleFavorite() async {
-    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/${this.id}.json';
+  Future<void> toggleFavorite(String token, String userId) async {
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/favoriteProducts/$userId/$id.json?auth=$token';
 
     this.isFavorite = !this.isFavorite;
     notifyListeners();
 
-    final response = await http.patch(url,
-        body: json.encode({
-          'isFavorite': isFavorite,
-        }));
+    final response = await http.put(url,
+        body: json.encode(
+          isFavorite,
+        ));
     //if the saving in server operation didn't work, We'll keep the old value
     if (response.statusCode >= 400) {
       isFavorite = !isFavorite;
@@ -40,7 +40,6 @@ class Product with ChangeNotifier {
 }
 
 class Products with ChangeNotifier {
-
   List<Product> _items = [];
   //   Product(
   //     id: 'p1',
@@ -71,8 +70,8 @@ class Products with ChangeNotifier {
   //     imageUrl: 'https://cdn.pixabay.com/photo/2015/08/05/09/55/mens-shoes-875948_960_720.jpg',
   //   ),
   var _token;
-  Products(this._token,this._items);
-
+  var _userId;
+  Products(this._token, this._userId, this._items);
 
   List<Product> get items => [..._items];
 
@@ -80,15 +79,25 @@ class Products with ChangeNotifier {
 
   Product getById(String id) => _items.firstWhere((product) => product.id == id);
 
-  Future<void> fetchAndSetProducts() async {
-    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products.json?auth=$_token';
+  Future<void> fetchAndSetProducts([bool filterUser = false]) async {
+    final filterSegment = filterUser ? 'orderBy="creatorId"&equalTo="$_userId"' : '';
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products.json?auth=$_token&$filterSegment';
 
     try {
       final response = await http.get(url);
-      if (response.statusCode >= 400) throw 'error while fetching data';
+
 
       final extractedData = json.decode(response.body) as Map<String, dynamic>; //map because we need keys
       if (extractedData == null) return;
+
+      if (extractedData['error'] != null) {
+        throw HttpException(extractedData['error']['message']);
+      }
+      //favorite data part
+      final urlFavorite = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/favoriteProducts/$_userId.json?auth=$_token';
+      final responseFavorite = await http.get(urlFavorite);
+      final favoriteData = json.decode(responseFavorite.body);
+      //end
 
       final List<Product> loadedProducts = [];
 
@@ -99,7 +108,7 @@ class Products with ChangeNotifier {
             title: prodData['title'],
             description: prodData['description'],
             price: prodData['price'],
-            isFavorite: prodData['isFavorite'],
+            isFavorite: favoriteData == null ? false : favoriteData[prodId] ?? false,
             imageUrl: prodData['imageUrl'],
           ));
         },
@@ -124,10 +133,11 @@ class Products with ChangeNotifier {
               'description': product.description,
               'imageUrl': product.imageUrl,
               'isFavorite': product.isFavorite,
+              'creatorId' : _userId,
             },
           ));
 
-      if(response.statusCode >= 400) throw HttpException('An error occurred while saving product in server!');
+      if (response.statusCode >= 400) throw HttpException('An error occurred while saving product in server!');
 
       _items.add(Product(
         id: json.decode(response.body)['name'],
@@ -138,7 +148,6 @@ class Products with ChangeNotifier {
         isFavorite: product.isFavorite,
       ));
       notifyListeners();
-
     } catch (error) {
       print(error);
       throw error;
@@ -146,10 +155,10 @@ class Products with ChangeNotifier {
   }
 
   Future<void> removeProduct(productId) async {
-    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/$productId.json?auth=$_token';//'cause we need it for sp item.
+    final url = 'https://flutter-app-fe68c-default-rtdb.firebaseio.com/products/$productId.json?auth=$_token'; //'cause we need it for sp item.
 
     final index = _items.indexWhere((element) => element.id == productId);
-    var productPointer = _items[index];//the item will keep in memory as there's pointer on it.
+    var productPointer = _items[index]; //the item will keep in memory as there's pointer on it.
 
     _items.removeAt(index);
     notifyListeners();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/providers/auth.dart';
 import '../screens/product_detail_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/product.dart';
@@ -20,9 +21,13 @@ class ProductGridItem extends StatelessWidget {
 
             ///could send multiple arguments as map.
           },
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
+          child: Hero(
+            tag: product.id,
+            child: FadeInImage(
+              placeholder: AssetImage('assets/images/product-placeholder.png'),
+              image: NetworkImage(product.imageUrl),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         footer: GridTileBar(
@@ -35,14 +40,15 @@ class ProductGridItem extends StatelessWidget {
               ),
               color: Theme.of(context).accentColor,
               onPressed: () {
-                product.toggleFavorite();
+                final auth = Provider.of<Auth>(context, listen: false);
+                product.toggleFavorite(auth.token, auth.userId);
               },
             ),
           ),
           title: Text(
             product.title,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20),
+            style: TextStyle(fontSize: 18),
           ),
           trailing: IconButton(
             icon: Icon(
@@ -74,4 +80,3 @@ class ProductGridItem extends StatelessWidget {
     );
   }
 }
-

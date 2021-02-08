@@ -55,7 +55,10 @@ class UserProductItem extends StatelessWidget {
             ),
           ),
         ),
-        const Divider(),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.0),
+          child: Divider(),
+        ),
       ],
     );
   }

@@ -116,17 +116,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
           ? CupertinoAlertDialog(
               title: const Text('An error occur!'),
               content: const Text('An error occurred while saving the info in server!'),
-              actions: <Widget>[flatButtonDialog(ctx)],
+              actions: <Widget>[_flatButtonDialog(ctx)],
             )
           : AlertDialog(
               title: const Text('An error occur!'),
               content: const Text('An error occurred while saving the info in server!'),
-              actions: <Widget>[flatButtonDialog(ctx)],
+              actions: <Widget>[_flatButtonDialog(ctx)],
             ),
     );
   }
 
-  FlatButton flatButtonDialog(BuildContext ctx) {
+  FlatButton _flatButtonDialog(BuildContext ctx) {
     return FlatButton(
       onPressed: () {
         Navigator.of(ctx).pop();

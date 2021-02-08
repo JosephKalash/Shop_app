@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app/helper/custom_route.dart';
 import 'package:flutter_app/providers/auth.dart';
 import 'package:flutter_app/providers/order.dart';
 import 'package:flutter_app/screens/edit_product_screen.dart';
 import 'package:flutter_app/screens/order_screen.dart';
+import './screens/splash_screen.dart';
 import 'package:flutter_app/screens/user_products_screen.dart';
 import './screens/cart_screen.dart';
 import './screens/product_overview_screen.dart';
@@ -22,20 +24,28 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ///use normal provider 'cause we initialized new object.
+        ///and proxy for provider depends on another.
         ChangeNotifierProvider(
           create: (_) => Auth(),
         ),
+        // ignore: missing_required_param
         ChangeNotifierProxyProvider<Auth, Products>(
-          update: (context, auth, previousProducts) => Products(
+          update: (_, auth, previousProducts) => Products(
             auth.token,
+            auth.userId,
             previousProducts == null ? [] : previousProducts.items,
           ),
         ),
         ChangeNotifierProvider(
           create: (_) => Cart(),
         ),
-        ChangeNotifierProvider(
-          create: (_) => Order(),
+        // ignore: missing_required_param
+        ChangeNotifierProxyProvider<Auth, Order>(
+          update: (_, auth, previousOrder) => Order(
+            auth.token,
+            auth.userId,
+            previousOrder == null ? [] : previousOrder.items,
+          ),
         )
       ],
       child: Consumer<Auth>(
@@ -46,8 +56,17 @@ class MyApp extends StatelessWidget {
             accentColor: Colors.deepOrange,
             visualDensity: VisualDensity.adaptivePlatformDensity,
             fontFamily: 'Lato',
+            pageTransitionsTheme: PageTransitionsTheme(builders: {
+              TargetPlatform.android: CustomPageTransitionBuilder(),
+              TargetPlatform.iOS: CustomPageTransitionBuilder(),
+            }),
           ),
-          home: auth.isAuth ? ProductOverviewScreen() : AuthScreen(),
+          home: auth.isAuth
+              ? ProductOverviewScreen()
+              : FutureBuilder(
+                  future: auth.tryAutoLogin(),
+                  builder: (ctx, authResultSnapshot) => authResultSnapshot.connectionState == ConnectionState.waiting ? SplashScreen() : AuthScreen(),
+                ),
           routes: {
             ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
             CartScreen.routeName: (ctx) => CartScreen(),
